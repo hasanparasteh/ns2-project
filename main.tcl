@@ -8,6 +8,9 @@ $ns namtrace-all $nf
 
 $ns color 1 Red
 $ns color 2 Blue
+$ns color 3 Yellow
+$ns color 4 Purple
+
 
 ######################
 set end_users {0 1 2 3 4 5 6 7 8 9 10 11}
@@ -122,6 +125,7 @@ foreach udp_origin [array names udp_connections] {
 	puts "Connecting UDP node: $udp_origin to node: $udp_dest"
 	
 	set _udp [new Agent/UDP]
+	$_udp set fid_ 1
 	set udp($i) $_udp
 	$ns attach-agent $n($udp_origin) $_udp
 	
@@ -133,20 +137,32 @@ foreach udp_origin [array names udp_connections] {
 	set cbr($i) $_cbr
 	
 	$_cbr set packetSize_ 8
-	$_cbr set interval [expr 0.1 * $i]
+	$_cbr set interval 5
 	$_cbr attach-agent $_udp
 
 	$ns connect $_udp $_null
 	
 	incr i
 }
+set n_cbr_connections $i
 
 proc start_traffic {} {
-
+	global n_cbr_connections cbr
+	
+	for {set i 0} {$i < $n_cbr_connections} {incr i} {
+		puts "start CBR traffic: $i"
+		$cbr($i) start
+	}
 }
 
-proc stop_traffic {} {
 
+proc stop_traffic {} {
+	global n_cbr_connections cbr
+	
+	for {set i 0} {$i < $n_cbr_connections} {incr i} {
+		puts "stop CBR traffic: $i"
+		$cbr($i) stop
+	}
 }
 
 proc finish {} {
@@ -161,6 +177,8 @@ proc finish {} {
     exit 0
 }
 
+$ns at 0.1 "start_traffic"
+$ns at 0.8 "stop_traffic"
 $ns at 1.0 "finish"
 
 $ns run
