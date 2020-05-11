@@ -115,21 +115,39 @@ array set udp_connections {
 	6 31
 	9 33
 }
+set i 0
 foreach udp_origin [array names udp_connections] {
-	puts "$udp_origin to $udp_connections($udp_origin)"
+	set udp_dest $udp_connections($udp_origin)
+	
+	puts "Connecting UDP node: $udp_origin to node: $udp_dest"
+	
+	set _udp [new Agent/UDP]
+	set udp($i) $_udp
+	$ns attach-agent $n($udp_origin) $_udp
+	
+	set _null [new Agent/Null]
+	set null($i) $_null
+	$ns attach-agent $n($udp_dest) $_null
+	
+	set _cbr [new Application/Traffic/CBR]
+	set cbr($i) $_cbr
+	
+	$_cbr set packetSize_ 8
+	$_cbr set interval [expr 0.1 * $i]
+	$_cbr attach-agent $_udp
+
+	$ns connect $_udp $_null
+	
+	incr i
 }
 
-#puts "Connect $udp_origin(0) to $udp_dest(0)"
-#foreach origin $udp_origin {
-#	set udp [new Agent/UDP]
-#	set $udp($i) $udp
-	
-#	set null [new Agent/Null]
-#	set $null($i) $null
+proc start_traffic {} {
 
-#	puts "connect $origin to $udp_dest($i)"
-#	incr i
-#}
+}
+
+proc stop_traffic {} {
+
+}
 
 proc finish {} {
     puts "Finishing..."
